@@ -1,5 +1,9 @@
 # wrapping-paper.nvim
 
+
+https://github.com/benlubas/wrapping-paper.nvim/assets/56943754/918609b2-57d3-4220-9120-fd9db240ed93
+
+
 > [!NOTE]
 > This is an incredibly early proof of concept, and it's not fully functional, or even that useful
 > at the moment, and it's full of bugs
