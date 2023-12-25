@@ -1,5 +1,6 @@
 local M = {}
 local Popup = require("nui.popup")
+local namespace = vim.api.nvim_create_namespace("wrapping_paper")
 
 local config = {
   width = 100, -- wrap at 100 chars
@@ -45,14 +46,15 @@ M.wrap_line = function()
 
   local win = vim.api.nvim_get_current_win()
   local pos = vim.fn.screenpos(win, linenumber, 0)
-  local win_off = P(vim.fn.getwininfo(win)[1])
-  local row = pos.row - (win_off.winrow)
-  local col = pos.col - (win_off.wincol)
+  local win_off = vim.fn.getwininfo(win)[1]
+  local row = pos.row - win_off.winrow
+  local col = pos.col - win_off.wincol
 
   vim.api.nvim_win_set_cursor(0, { linenumber, 0 })
   local text = vim.api.nvim_get_current_line()
   local buf = vim.api.nvim_get_current_buf()
 
+  local height = calc_height(text, config.width)
   local popup = Popup({
     focusable = true,
     enter = true,
@@ -66,7 +68,7 @@ M.wrap_line = function()
       col = col,
     },
     size = {
-      height = calc_height(text, config.width),
+      height = height,
       width = config.width,
     },
     -- TODO: there might be more of these, really I should just use the "minimal" window style, but
@@ -80,6 +82,7 @@ M.wrap_line = function()
       cursorcolumn = false,
       foldcolumn = "0",
       showbreak = "",
+      spell = vim.o.spell,
     },
   })
   popup:mount()
@@ -87,12 +90,22 @@ M.wrap_line = function()
   for _, key in ipairs(gmaps) do
     popup:map("n", key, "g" .. key)
   end
-  popup:on({ "BufLeave", "BufDelete", "WinScrolled" }, function()
+  -- add virtual text
+  local vt = {}
+  for _ = 1, height - 1 do
+    table.insert(vt, {{ " ", "Comment" }})
+  end
+  P(vt)
+  local extmark_id = vim.api.nvim_buf_set_extmark(buf, namespace, linenumber, 0, {
+    virt_lines = vt,
+  })
+
+  popup:on({ "BufLeave", "BufDelete", "WinScrolled", "TextChanged", "TextChangedI" }, function()
     local line = vim.api.nvim_get_current_line()
     local linenr = vim.api.nvim_win_get_cursor(0)[1]
     -- potentially update the height
     if linenr == linenumber then
-      local height = calc_height(line, config.width)
+      local updated_height = calc_height(line, config.width)
       popup:update_layout({
         relative = "editor",
         position = {
@@ -100,15 +113,31 @@ M.wrap_line = function()
           col = popup.win_config.col,
         },
         size = {
-          height = height,
+          height = updated_height,
           width = config.width,
         },
       })
       linenumber = linenr
+
+      -- update the virtual text
+
+      local updated_vt = {}
+      for _ = 1, updated_height - 1 do
+        table.insert(updated_vt, {{ " ", "Comment" }})
+      end
+      -- add virtual text
+      vim.api.nvim_buf_set_extmark(buf, namespace, linenumber, 0, {
+        id = extmark_id,
+        virt_lines = updated_vt,
+      })
       return
     end
-    popup:unmount()
     popup:off({ "BufLeave", "BufDelete", "WinScrolled" })
+    for _, key in ipairs(gmaps) do
+      popup:unmap("n", key)
+    end
+    vim.api.nvim_buf_del_extmark(buf, namespace, extmark_id)
+    popup:unmount()
   end)
   popup:show()
 end
