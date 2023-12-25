@@ -46,7 +46,7 @@ M.wrap_line = function()
 
   local win = vim.api.nvim_get_current_win()
   local pos = vim.fn.screenpos(win, linenumber, 0)
-  local win_off = vim.fn.getwininfo(win)[1]
+  local win_off = P(vim.fn.getwininfo(win)[1])
   local row = pos.row - win_off.winrow
   local col = pos.col - win_off.wincol
 
@@ -93,13 +93,20 @@ M.wrap_line = function()
   -- add virtual text
   local vt = {}
   for _ = 1, height - 1 do
-    table.insert(vt, {{ " ", "Comment" }})
+    table.insert(vt, { { " ", "Comment" } })
   end
   local extmark_id = vim.api.nvim_buf_set_extmark(buf, namespace, linenumber, 0, {
     virt_lines = vt,
   })
-
-  popup:on({ "BufLeave", "BufDelete", "WinScrolled", "TextChanged", "TextChangedI" }, function()
+  popup:on({ "BufLeave", "BufDelete", "WinClosed", "WinLeave" }, function()
+    popup:off({ "BufLeave", "BufDelete", "WinScrolled" })
+    for _, key in ipairs(gmaps) do
+      popup:unmap("n", key)
+    end
+    vim.api.nvim_buf_del_extmark(buf, namespace, extmark_id)
+    popup:unmount()
+  end)
+  popup:on({ "WinScrolled", "TextChanged", "TextChangedI" }, function()
     local line = vim.api.nvim_get_current_line()
     local linenr = vim.api.nvim_win_get_cursor(0)[1]
     -- potentially update the height
@@ -122,7 +129,7 @@ M.wrap_line = function()
 
       local updated_vt = {}
       for _ = 1, updated_height - 1 do
-        table.insert(updated_vt, {{ " ", "Comment" }})
+        table.insert(updated_vt, { { " ", "Comment" } })
       end
       -- add virtual text
       vim.api.nvim_buf_set_extmark(buf, namespace, linenumber, 0, {
