@@ -95,7 +95,6 @@ M.wrap_line = function()
   for _ = 1, height - 1 do
     table.insert(vt, {{ " ", "Comment" }})
   end
-  P(vt)
   local extmark_id = vim.api.nvim_buf_set_extmark(buf, namespace, linenumber, 0, {
     virt_lines = vt,
   })
