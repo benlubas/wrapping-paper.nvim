@@ -4,6 +4,18 @@ local namespace = vim.api.nvim_create_namespace("wrapping_paper")
 
 local config = {
   width = 100, -- wrap at 100 chars
+  remaps = {
+    { "n", "j", "gj" },
+    { "n", "k", "gk" },
+    { "n", "0", "g0" },
+    { "n", "_", "g_" },
+    { "n", "^", "g^" },
+    { "v", "j", "gj" },
+    { "v", "k", "gk" },
+    { "v", "0", "g0" },
+    { "v", "_", "g_" },
+    { "v", "^", "g^" },
+  },
 }
 
 M.setup = function(opts)
@@ -86,22 +98,21 @@ M.wrap_line = function()
     },
   })
   popup:mount()
-  local gmaps = { "j", "k", "0", "_", "^" }
-  for _, key in ipairs(gmaps) do
-    popup:map("n", key, "g" .. key)
+  for _, item in ipairs(config.remaps) do
+    popup:map(item[1], item[2], item[3])
   end
   -- add virtual text
   local vt = {}
   for _ = 1, height - 1 do
     table.insert(vt, { { " ", "Comment" } })
   end
-  local extmark_id = vim.api.nvim_buf_set_extmark(buf, namespace, linenumber, 0, {
+  local extmark_id = vim.api.nvim_buf_set_extmark(buf, namespace, linenumber - 1, 0, {
     virt_lines = vt,
   })
   popup:on({ "BufLeave", "BufDelete", "WinClosed", "WinLeave" }, function()
     popup:off({ "BufLeave", "BufDelete", "WinScrolled" })
-    for _, key in ipairs(gmaps) do
-      popup:unmap("n", key)
+    for _, item in ipairs(config.remaps) do
+      popup:unmap(item[1], item[2])
     end
     vim.api.nvim_buf_del_extmark(buf, namespace, extmark_id)
     popup:unmount()
@@ -132,15 +143,15 @@ M.wrap_line = function()
         table.insert(updated_vt, { { " ", "Comment" } })
       end
       -- add virtual text
-      vim.api.nvim_buf_set_extmark(buf, namespace, linenumber, 0, {
+      vim.api.nvim_buf_set_extmark(buf, namespace, linenumber - 1, 0, {
         id = extmark_id,
         virt_lines = updated_vt,
       })
       return
     end
     popup:off({ "BufLeave", "BufDelete", "WinScrolled" })
-    for _, key in ipairs(gmaps) do
-      popup:unmap("n", key)
+    for _, item in ipairs(config.remaps) do
+      popup:unmap(item[1], item[2])
     end
     vim.api.nvim_buf_del_extmark(buf, namespace, extmark_id)
     popup:unmount()
