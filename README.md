@@ -60,9 +60,6 @@ vim.keymap.set(
 - If you want to use spell suggest with telescope's floating windows, you're gonna have a bad time
   (z= works fine though)
 - Moving out of the floating window isn't "natural" because one of your motions gets eaten
-- The floating window is currently a fixed width. But it would take not that much effort to make it
-  detect the width of the buffer. Personally I prefer it to be max 100 chars, b/c that's where
-  I hard wrap my text, but this does look weird.
 - keys that should scroll the buffer (like \<c-e\>) will just close the float when it would be nice
   if they scrolled the outer buffer.
 
