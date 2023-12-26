@@ -3,7 +3,7 @@ local Popup = require("nui.popup")
 local namespace = vim.api.nvim_create_namespace("wrapping_paper")
 
 local config = {
-  width = 100, -- wrap at 100 chars
+  width = math.huge,
   remaps = {
     { "n", "j", "gj" },
     { "n", "k", "gk" },
@@ -61,12 +61,14 @@ M.wrap_line = function()
   local win_info = vim.fn.getwininfo(win)[1]
   local row = pos.row - win_info.winrow
   local col = win_info.wincol + win_info.textoff - 1
+  local width = win_info.width - win_info.textoff
+  width = math.min(width, config.width)
 
   vim.api.nvim_win_set_cursor(0, { linenumber, 0 })
   local text = vim.api.nvim_get_current_line()
   local buf = vim.api.nvim_get_current_buf()
 
-  local height = calc_height(text, config.width)
+  local height = calc_height(text, width)
   local popup = Popup({
     focusable = true,
     enter = true,
@@ -81,7 +83,7 @@ M.wrap_line = function()
     },
     size = {
       height = height,
-      width = config.width,
+      width = width,
     },
     -- TODO: there might be more of these, really I should just use the "minimal" window style, but
     -- idk how to do that with nui
@@ -122,7 +124,7 @@ M.wrap_line = function()
     local linenr = vim.api.nvim_win_get_cursor(0)[1]
     -- potentially update the height
     if linenr == linenumber then
-      local updated_height = calc_height(line, config.width)
+      local updated_height = calc_height(line, width)
       popup:update_layout({
         relative = "editor",
         position = {
@@ -131,10 +133,9 @@ M.wrap_line = function()
         },
         size = {
           height = updated_height,
-          width = config.width,
+          width = width,
         },
       })
-      linenumber = linenr
 
       -- update the virtual text
 

@@ -27,7 +27,7 @@ call setup if you want to wrap at different width, otherwise you don't need to
 
 ```lua
 require("wrapping-paper").setup({
-  width = 100, -- default
+  width = math.huge, -- max width of the wrap window
   remaps = {
     -- { "mode", "lhs", "rhs" }, -- these are added to the buffer on open, and removed on close
     { "n", "j", "gj" }, -- defaults:
