@@ -33,12 +33,12 @@ require("wrapping-paper").setup({
     { "n", "j", "gj" }, -- defaults:
     { "n", "k", "gk" },
     { "n", "0", "g0" },
-    { "n", "_", "g_" },
+    { "n", "_", "g0" }, -- g_ is weird, it goes to the end of the line
     { "n", "^", "g^" },
     { "v", "j", "gj" },
     { "v", "k", "gk" },
     { "v", "0", "g0" },
-    { "v", "_", "g_" },
+    { "v", "_", "g0" },
     { "v", "^", "g^" },
   }
 })
@@ -57,10 +57,12 @@ vim.keymap.set(
 
 ## Shortcomings
 
-- If you want to use spell suggest with telescope's floating windows, you're gonna have a bad time
-  (z= works fine though)
+In rough order of priority:
+
 - Moving out of the floating window isn't "natural" because one of your motions gets eaten
 - keys that should scroll the buffer (like \<c-e\>) will just close the float when it would be nice
-  if they scrolled the outer buffer.
+if they scrolled the outer buffer.
+- If you want to use spell suggest with telescope's floating windows, you're gonna have a bad time
+  (z= works fine though)
 
 Feel free to open issues/PRs if you find more problems or want to fix these ones!
