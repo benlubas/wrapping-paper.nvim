@@ -1,6 +1,6 @@
 # wrapping-paper.nvim
 
-https://github.com/benlubas/wrapping-paper.nvim/assets/56943754/918609b2-57d3-4220-9120-fd9db240ed93
+https://github.com/benlubas/wrapping-paper.nvim/assets/56943754/c9bc31da-7716-4896-84ae-503b0509a44f
 
 > [!NOTE]
 > This is an early proof of concept, and it's not fully functional. But it's usable and useful in
