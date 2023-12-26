@@ -58,9 +58,9 @@ M.wrap_line = function()
 
   local win = vim.api.nvim_get_current_win()
   local pos = vim.fn.screenpos(win, linenumber, 0)
-  local win_off = P(vim.fn.getwininfo(win)[1])
-  local row = pos.row - win_off.winrow
-  local col = pos.col - win_off.wincol
+  local win_info = vim.fn.getwininfo(win)[1]
+  local row = pos.row - win_info.winrow
+  local col = win_info.wincol + win_info.textoff - 1
 
   vim.api.nvim_win_set_cursor(0, { linenumber, 0 })
   local text = vim.api.nvim_get_current_line()
