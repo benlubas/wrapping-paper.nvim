@@ -54,6 +54,14 @@ local calc_height = function(text, width)
   local lines = vim.split(text, "\n")
   local height = 0
   for _, line in ipairs(lines) do
+    local leading_whitespace = line:match("^%s+")
+    if leading_whitespace and vim.wo.breakindent then
+      leading_whitespace = #leading_whitespace
+      line = line:sub(leading_whitespace)
+      width = width - leading_whitespace
+    else
+      leading_whitespace = 0
+    end
     while #line > 0 do
       if #line < width then
         height = height + 1
@@ -62,7 +70,7 @@ local calc_height = function(text, width)
       local chunk = line:sub(0, width)
       local i = #chunk
       while i > 0 do
-        if vim.tbl_contains({ " ", "\t" }, chunk:sub(i, i)) then
+        if vim.tbl_contains(vim.split(vim.o.breakat, ""), chunk:sub(i, i)) then
           break
         end
         i = i - 1
