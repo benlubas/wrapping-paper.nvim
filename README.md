@@ -92,10 +92,14 @@ vim.keymap.set(
 
 In rough order of priority:
 
-- Moving out of the floating window isn't "natural" because one of your motions gets eaten
-- keys that should scroll the buffer (like \<c-e\>) will just close the float when it would be nice
-if they scrolled the outer buffer.
-- If you want to use spell suggest with telescope's floating windows, you're gonna have a bad time
-  (z= works fine though)
+- [x] Moving out of the floating window isn't "natural" because one of your motions gets eaten
+- [x] keys that should scroll the buffer (like \<c-e\>) will just close the float when it would be nice
+      if they scrolled the outer buffer.  
+    - this is kinda addressed. Not all the key combos are covered, but the ones I use are. And it's
+      really hacky b/c there's no good way to scroll a window via the api (that I know of).
+- [ ] If you want to use spell suggest with telescope's floating windows, you're gonna have a bad time
+      (z= works fine though) I'm not going to fix this. if you really care, you can use 'eventignore' to
+      open the telescope window to avoid setting off the autocommands that close the window. This is
+      just something you can do yourself in your telescope mapping.
 
 Feel free to open issues/PRs if you find more problems or want to fix these ones!
