@@ -30,17 +30,50 @@ require("wrapping-paper").setup({
   width = math.huge, -- max width of the wrap window
   remaps = {
     -- { "mode", "lhs", "rhs" }, -- these are added to the buffer on open, and removed on close
-    { "n", "j", "gj" }, -- defaults:
-    { "n", "k", "gk" },
+    { "n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true } },
+    { "n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true } },
     { "n", "0", "g0" },
-    { "n", "_", "g0" }, -- g_ is weird, it goes to the end of the line
+    { "n", "_", "g0" },
     { "n", "^", "g^" },
-    { "v", "j", "gj" },
-    { "v", "k", "gk" },
+    { "v", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true } },
+    { "v", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true } },
     { "v", "0", "g0" },
     { "v", "_", "g0" },
     { "v", "^", "g^" },
-  }
+
+    -- NOTE: these functions are called when the cursor is still in the parent window
+    -- remap <c-d> and <c-u>, otherwise they scroll half the popup height which is not what you
+    -- expect to happen
+    function()
+      return { "n", "<c-d>", math.floor(vim.api.nvim_win_get_height(0) / 2) .. "j" }
+    end,
+    function()
+      return { "n", "<c-u>", math.floor(vim.api.nvim_win_get_height(0) / 2) .. "k" }
+    end,
+
+    -- remap <c-y> and <c-e> to allow scrolling the screen (this is a hack, and it causes window
+    -- flashing. It's the simplest way to do this, and I don't plan to use these mappings very often)
+    function()
+      return { "n", "<c-e>",
+        function()
+          local cursor = vim.api.nvim_win_get_cursor(0)
+          local keys = vim.api.nvim_replace_termcodes(":q<CR><C-e>:lua require('wrapping-paper').wrap_line()<CR>", true, false, true)
+          vim.api.nvim_feedkeys(keys, "n", false)
+          vim.api.nvim_win_set_cursor(0, cursor)
+        end
+      }
+    end,
+    function()
+      return { "n", "<c-y>",
+        function()
+          local cursor = vim.api.nvim_win_get_cursor(0)
+          local keys = vim.api.nvim_replace_termcodes(":q<CR><C-y>:lua require('wrapping-paper').wrap_line()<CR>", true, false, true)
+          vim.api.nvim_feedkeys(keys, "n", false)
+          vim.api.nvim_win_set_cursor(0, cursor)
+        end
+      }
+    end
+  },
 })
 ```
 

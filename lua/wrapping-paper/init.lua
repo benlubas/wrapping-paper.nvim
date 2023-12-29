@@ -5,16 +5,43 @@ local namespace = vim.api.nvim_create_namespace("wrapping_paper")
 local config = {
   width = math.huge,
   remaps = {
-    { "n", "j", "gj" },
-    { "n", "k", "gk" },
+    { "n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true } },
+    { "n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true } },
     { "n", "0", "g0" },
     { "n", "_", "g0" },
     { "n", "^", "g^" },
-    { "v", "j", "gj" },
-    { "v", "k", "gk" },
+    { "v", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true } },
+    { "v", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true } },
     { "v", "0", "g0" },
     { "v", "_", "g0" },
     { "v", "^", "g^" },
+    -- these functions are called when the cursor is still in the parent window
+    function()
+      return { "n", "<c-d>", math.floor(vim.api.nvim_win_get_height(0) / 2) .. "j" }
+    end,
+    function()
+      return { "n", "<c-u>", math.floor(vim.api.nvim_win_get_height(0) / 2) .. "k" }
+    end,
+    function()
+      return { "n", "<c-e>",
+        function()
+          local cursor = vim.api.nvim_win_get_cursor(0)
+          local keys = vim.api.nvim_replace_termcodes(":q<CR><C-e>:lua require('wrapping-paper').wrap_line()<CR>", true, false, true)
+          vim.api.nvim_feedkeys(keys, "n", false)
+          vim.api.nvim_win_set_cursor(0, cursor)
+        end
+      }
+    end,
+    function()
+      return { "n", "<c-y>",
+        function()
+          local cursor = vim.api.nvim_win_get_cursor(0)
+          local keys = vim.api.nvim_replace_termcodes(":q<CR><C-y>:lua require('wrapping-paper').wrap_line()<CR>", true, false, true)
+          vim.api.nvim_feedkeys(keys, "n", false)
+          vim.api.nvim_win_set_cursor(0, cursor)
+        end
+      }
+    end
   },
 }
 
@@ -54,7 +81,8 @@ end
 
 local linenumber = nil
 M.wrap_line = function()
-  linenumber = vim.api.nvim_win_get_cursor(0)[1]
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  linenumber = cursor[1]
 
   local win = vim.api.nvim_get_current_win()
   local pos = vim.fn.screenpos(win, linenumber, 0)
@@ -69,6 +97,10 @@ M.wrap_line = function()
   local buf = vim.api.nvim_get_current_buf()
 
   local height = calc_height(text, width)
+  if height <= 0 then
+    vim.notify("[wrapping-paper] Line is too short", vim.log.levels.INFO)
+    return
+  end
   local popup = Popup({
     focusable = true,
     enter = true,
@@ -99,10 +131,13 @@ M.wrap_line = function()
       spell = vim.o.spell,
     },
   })
-  popup:mount()
   for _, item in ipairs(config.remaps) do
-    popup:map(item[1], item[2], item[3])
+    if type(item) == "function" then
+      item = item()
+    end
+    popup:map(item[1], item[2], item[3], item[4])
   end
+  popup:mount()
   -- add virtual text
   local vt = {}
   for _ = 1, height - 1 do
@@ -114,16 +149,20 @@ M.wrap_line = function()
   popup:on({ "BufLeave", "BufDelete", "WinClosed", "WinLeave" }, function()
     popup:off({ "BufLeave", "BufDelete", "WinScrolled" })
     for _, item in ipairs(config.remaps) do
+      if type(item) == "function" then
+        item = item()
+      end
       popup:unmap(item[1], item[2])
     end
     vim.api.nvim_buf_del_extmark(buf, namespace, extmark_id)
     popup:unmount()
   end)
-  popup:on({ "WinScrolled", "TextChanged", "TextChangedI" }, function()
+  popup:on({ "WinScrolled", "TextChanged", "TextChangedI" }, function(e)
+    vim.api.nvim_get_option_value("eventignore", { scope = "global" })
     local line = vim.api.nvim_get_current_line()
-    local linenr = vim.api.nvim_win_get_cursor(0)[1]
+    local moved_cursor = vim.api.nvim_win_get_cursor(0)
     -- potentially update the height
-    if linenr == linenumber then
+    if moved_cursor[1] == linenumber then
       local updated_height = calc_height(line, width)
       popup:update_layout({
         relative = "editor",
@@ -152,12 +191,17 @@ M.wrap_line = function()
     end
     popup:off({ "BufLeave", "BufDelete", "WinScrolled" })
     for _, item in ipairs(config.remaps) do
+      if type(item) == "function" then
+        item = item()
+      end
       popup:unmap(item[1], item[2])
     end
     vim.api.nvim_buf_del_extmark(buf, namespace, extmark_id)
     popup:unmount()
+    vim.api.nvim_win_set_cursor(0, moved_cursor)
   end)
   popup:show()
+  vim.api.nvim_win_set_cursor(popup.winid, { linenumber, cursor[2] })
 end
 
 return M
