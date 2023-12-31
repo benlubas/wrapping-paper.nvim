@@ -59,19 +59,25 @@ M.setup = function(opts)
   config = vim.tbl_deep_extend("force", config, opts or {})
 end
 
--- TODO: This is just a rough estimate, it doesn't take into account chars in 'breakat'
 local calc_height = function(text, width)
   local lines = vim.split(text, "\n")
   local height = 0
-  for _, line in ipairs(lines) do
-    local leading_whitespace = line:match("^%s+")
-    if leading_whitespace and vim.wo.breakindent then
-      leading_whitespace = #leading_whitespace
-      line = line:sub(leading_whitespace)
-      width = width - leading_whitespace
-    else
-      leading_whitespace = 0
+  for li, line in ipairs(lines) do
+    local left_offset = 0
+
+    -- account for breakindent
+    local leading_white_space = line:match("^%s+")
+    if leading_white_space and vim.wo.breakindent then
+      left_offset = left_offset + #leading_white_space
+      line = line:sub(#leading_white_space)
     end
+
+    -- account for showbreak
+    if li > 1 then
+      left_offset = left_offset + #vim.wo.showbreak
+    end
+
+    width = width - left_offset
     while #line > 0 do
       if #line < width then
         height = height + 1
@@ -105,7 +111,7 @@ M.wrap_line = function()
   local win = vim.api.nvim_get_current_win()
   local pos = vim.fn.screenpos(win, linenumber, 0)
   local win_info = vim.fn.getwininfo(win)[1]
-  local row = pos.row - win_info.winrow
+  local row = pos.row - 1
   local col = win_info.wincol + win_info.textoff - 1
   local width = win_info.width - win_info.textoff
   width = math.min(width, config.width)
