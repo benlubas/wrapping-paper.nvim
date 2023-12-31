@@ -2,11 +2,12 @@
 
 https://github.com/benlubas/wrapping-paper.nvim/assets/56943754/c9bc31da-7716-4896-84ae-503b0509a44f
 
-> [!NOTE]
-> This is an early proof of concept, and it's not fully functional. But it's usable and useful in
-> some cases
 
-Simple plugin which enables wrapping a single line at a time using floating windows and virtual text trickery. I'm doing this by creating a floating window on the current line, opening the same buffer in the floating window, and then using auto commands to close the window when it scrolls. There are still a **TON** of bugs and unhandled edge cases, but this approach seems promising.
+<!-- this line is intentionally not wrapped -->
+Simple plugin which enables wrapping a single line at a time using floating windows and virtual text trickery. I'm doing this by creating a floating window on the current line, opening the same buffer in the floating window (so that syntax is normal and changes will take effect), using virtual text so the wrapped line appears to occupy space in the buffer, and then using auto commands to close the window when it scrolls. There are also a few remaps that make the cursor behave itself.
+
+There are probably still bugs and unhandled edge cases, but this is working pretty well and I'm
+happy with it for the time being.
 
 ## Install
 
@@ -50,29 +51,36 @@ require("wrapping-paper").setup({
     function()
       return { "n", "<c-u>", math.floor(vim.api.nvim_win_get_height(0) / 2) .. "k" }
     end,
-
-    -- remap <c-y> and <c-e> to allow scrolling the screen (this is a hack, and it causes window
-    -- flashing. It's the simplest way to do this, and I don't plan to use these mappings very often)
-    function()
-      return { "n", "<c-e>",
-        function()
-          local cursor = vim.api.nvim_win_get_cursor(0)
-          local keys = vim.api.nvim_replace_termcodes(":q<CR><C-e>:lua require('wrapping-paper').wrap_line()<CR>", true, false, true)
-          vim.api.nvim_feedkeys(keys, "n", false)
-          vim.api.nvim_win_set_cursor(0, cursor)
-        end
-      }
-    end,
-    function()
-      return { "n", "<c-y>",
-        function()
-          local cursor = vim.api.nvim_win_get_cursor(0)
-          local keys = vim.api.nvim_replace_termcodes(":q<CR><C-y>:lua require('wrapping-paper').wrap_line()<CR>", true, false, true)
-          vim.api.nvim_feedkeys(keys, "n", false)
-          vim.api.nvim_win_set_cursor(0, cursor)
-        end
-      }
-    end
+    {
+      "n",
+      "<c-e>",
+      function()
+        local cursor = vim.api.nvim_win_get_cursor(0)
+        local keys = vim.api.nvim_replace_termcodes(
+          ":q<CR><C-e>:lua require('wrapping-paper').wrap_line()<CR>",
+          true,
+          false,
+          true
+        )
+        vim.api.nvim_feedkeys(keys, "n", false)
+        vim.api.nvim_win_set_cursor(0, cursor)
+      end,
+    },
+    {
+      "n",
+      "<c-y>",
+      function()
+        local cursor = vim.api.nvim_win_get_cursor(0)
+        local keys = vim.api.nvim_replace_termcodes(
+          ":q<CR><C-y>:lua require('wrapping-paper').wrap_line()<CR>",
+          true,
+          false,
+          true
+        )
+        vim.api.nvim_feedkeys(keys, "n", false)
+        vim.api.nvim_win_set_cursor(0, cursor)
+      end,
+    },
   },
 })
 ```
@@ -90,16 +98,8 @@ vim.keymap.set(
 
 ## Shortcomings
 
-In rough order of priority:
-
-- [x] Moving out of the floating window isn't "natural" because one of your motions gets eaten
-- [x] keys that should scroll the buffer (like \<c-e\>) will just close the float when it would be nice
-      if they scrolled the outer buffer.  
-    - this is kinda addressed. Not all the key combos are covered, but the ones I use are. And it's
-      really hacky b/c there's no good way to scroll a window via the api (that I know of).
-- [ ] If you want to use spell suggest with telescope's floating windows, you're gonna have a bad time
-      (z= works fine though) I'm not going to fix this. if you really care, you can use 'eventignore' to
-      open the telescope window to avoid setting off the autocommands that close the window. This is
-      just something you can do yourself in your telescope mapping.
-
-Feel free to open issues/PRs if you find more problems or want to fix these ones!
+- Treesitter context windows don't show up when you're in the window
+- If you want to use spell suggest with telescope's floating windows, you're gonna have a bad time
+  (z= works fine though) I'm not going to fix this. if you really care, you can use 'eventignore' to
+  open the telescope window to avoid setting off the autocommands that close the window. This is
+  just something you can do yourself in your telescope mapping.

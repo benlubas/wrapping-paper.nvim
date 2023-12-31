@@ -22,26 +22,36 @@ local config = {
     function()
       return { "n", "<c-u>", math.floor(vim.api.nvim_win_get_height(0) / 2) .. "k" }
     end,
-    function()
-      return { "n", "<c-e>",
-        function()
-          local cursor = vim.api.nvim_win_get_cursor(0)
-          local keys = vim.api.nvim_replace_termcodes(":q<CR><C-e>:lua require('wrapping-paper').wrap_line()<CR>", true, false, true)
-          vim.api.nvim_feedkeys(keys, "n", false)
-          vim.api.nvim_win_set_cursor(0, cursor)
-        end
-      }
-    end,
-    function()
-      return { "n", "<c-y>",
-        function()
-          local cursor = vim.api.nvim_win_get_cursor(0)
-          local keys = vim.api.nvim_replace_termcodes(":q<CR><C-y>:lua require('wrapping-paper').wrap_line()<CR>", true, false, true)
-          vim.api.nvim_feedkeys(keys, "n", false)
-          vim.api.nvim_win_set_cursor(0, cursor)
-        end
-      }
-    end
+    {
+      "n",
+      "<c-e>",
+      function()
+        local cursor = vim.api.nvim_win_get_cursor(0)
+        local keys = vim.api.nvim_replace_termcodes(
+          ":q<CR><C-e>:lua require('wrapping-paper').wrap_line()<CR>",
+          true,
+          false,
+          true
+        )
+        vim.api.nvim_feedkeys(keys, "n", false)
+        vim.api.nvim_win_set_cursor(0, cursor)
+      end,
+    },
+    {
+      "n",
+      "<c-y>",
+      function()
+        local cursor = vim.api.nvim_win_get_cursor(0)
+        local keys = vim.api.nvim_replace_termcodes(
+          ":q<CR><C-y>:lua require('wrapping-paper').wrap_line()<CR>",
+          true,
+          false,
+          true
+        )
+        vim.api.nvim_feedkeys(keys, "n", false)
+        vim.api.nvim_win_set_cursor(0, cursor)
+      end,
+    },
   },
 }
 
