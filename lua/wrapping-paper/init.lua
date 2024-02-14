@@ -2,6 +2,8 @@ local M = {}
 local Popup = require("nui.popup")
 local namespace = vim.api.nvim_create_namespace("wrapping_paper")
 
+local open_buf = nil
+
 local config = {
   width = math.huge,
   remaps = {
@@ -105,6 +107,10 @@ end
 
 local linenumber = nil
 M.wrap_line = function()
+  if open_buf then
+    return
+  end
+
   local cursor = vim.api.nvim_win_get_cursor(0)
   linenumber = cursor[1]
 
@@ -118,7 +124,7 @@ M.wrap_line = function()
 
   vim.api.nvim_win_set_cursor(0, { linenumber, 0 })
   local text = vim.api.nvim_get_current_line()
-  local buf = vim.api.nvim_get_current_buf()
+  open_buf = vim.api.nvim_get_current_buf()
 
   local height = calc_height(text, width)
   if height <= 0 then
@@ -128,7 +134,7 @@ M.wrap_line = function()
   local popup = Popup({
     focusable = true,
     enter = true,
-    bufnr = buf,
+    bufnr = open_buf,
     border = { style = "none" },
     relative = {
       type = "editor",
@@ -167,7 +173,7 @@ M.wrap_line = function()
   for _ = 1, height - 1 do
     table.insert(vt, { { " ", "Comment" } })
   end
-  local extmark_id = vim.api.nvim_buf_set_extmark(buf, namespace, linenumber - 1, 0, {
+  local extmark_id = vim.api.nvim_buf_set_extmark(open_buf, namespace, linenumber - 1, 0, {
     virt_lines = vt,
   })
   popup:on({ "BufLeave", "BufDelete", "WinClosed", "WinLeave" }, function()
@@ -178,7 +184,8 @@ M.wrap_line = function()
       end
       popup:unmap(item[1], item[2])
     end
-    vim.api.nvim_buf_del_extmark(buf, namespace, extmark_id)
+    vim.api.nvim_buf_del_extmark(open_buf, namespace, extmark_id)
+    open_buf = nil
     popup:unmount()
   end)
   popup:on({ "WinScrolled", "TextChanged", "TextChangedI" }, function(e)
@@ -207,7 +214,7 @@ M.wrap_line = function()
         table.insert(updated_vt, { { " ", "Comment" } })
       end
       -- add virtual text
-      vim.api.nvim_buf_set_extmark(buf, namespace, linenumber - 1, 0, {
+      vim.api.nvim_buf_set_extmark(open_buf, namespace, linenumber - 1, 0, {
         id = extmark_id,
         virt_lines = updated_vt,
       })
@@ -220,7 +227,8 @@ M.wrap_line = function()
       end
       popup:unmap(item[1], item[2])
     end
-    vim.api.nvim_buf_del_extmark(buf, namespace, extmark_id)
+    vim.api.nvim_buf_del_extmark(open_buf, namespace, extmark_id)
+    open_buf = nil
     popup:unmount()
     vim.api.nvim_win_set_cursor(0, moved_cursor)
   end)
