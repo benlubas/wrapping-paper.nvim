@@ -4,16 +4,30 @@ local namespace = vim.api.nvim_create_namespace("wrapping_paper")
 
 local open_buf = nil
 
+-- special function to account for the way `gk` doesn't do what you expect when the line above
+-- would also be wrapped. `gj` does not have this issue, in fact, doing this for `gj` would
+-- make it misbehave
+local function k()
+  local count = vim.v.count
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local keys = "gk"
+  if count == 0 and (not M.first_line_length or cursor[2] <= M.first_line_length) then
+    keys = "k"
+  end
+
+  vim.api.nvim_feedkeys(keys, "n", false)
+end
+
 local config = {
   width = math.huge,
   remaps = {
     { "n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true } },
-    { "n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true } },
+    { "n", "k", k },
     { "n", "0", "g0" },
     { "n", "_", "g0" },
     { "n", "^", "g^" },
     { "v", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true } },
-    { "v", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true } },
+    { "v", "k", k },
     { "v", "0", "g0" },
     { "v", "_", "g0" },
     { "v", "^", "g^" },
@@ -61,6 +75,7 @@ M.setup = function(opts)
   config = vim.tbl_deep_extend("force", config, opts or {})
 end
 
+M.first_line_length = nil
 local calc_height = function(text, width)
   local lines = vim.split(text, "\n")
   local height = 0
@@ -98,6 +113,7 @@ local calc_height = function(text, width)
           break
         end
       end
+      M.first_line_length = M.first_line_length or i
       line = line:sub(i)
       height = height + 1
     end
@@ -220,6 +236,8 @@ M.wrap_line = function()
       })
       return
     end
+
+    -- else, if it moved the line, close the window
     popup:off({ "BufLeave", "BufDelete", "WinScrolled" })
     for _, item in ipairs(config.remaps) do
       if type(item) == "function" then
@@ -230,6 +248,8 @@ M.wrap_line = function()
     vim.api.nvim_buf_del_extmark(open_buf, namespace, extmark_id)
     open_buf = nil
     popup:unmount()
+
+    -- restore the cursor
     vim.api.nvim_win_set_cursor(0, moved_cursor)
   end)
   popup:show()
