@@ -32,12 +32,12 @@ require("wrapping-paper").setup({
   remaps = {
     -- { "mode", "lhs", "rhs" }, -- these are added to the buffer on open, and removed on close
     { "n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true } },
-    { "n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true } },
+    { "n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true } }, -- This isn't really how it's done, the real mapping for k is more complicated, but it will function like this
     { "n", "0", "g0" },
     { "n", "_", "g0" },
     { "n", "^", "g^" },
     { "v", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true } },
-    { "v", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true } },
+    { "v", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true } }, -- same as normal mode k ^
     { "v", "0", "g0" },
     { "v", "_", "g0" },
     { "v", "^", "g^" },
