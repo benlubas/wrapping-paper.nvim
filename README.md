@@ -17,7 +17,7 @@ Example with lazy:
 { "benlubas/wrapping-paper.nvim" },
 ```
 
-_([nui.nvim](https://github.com/MunifTanjim/nui.nvim) is installed as a dependency
+_NOTE: ([nui.nvim](https://github.com/MunifTanjim/nui.nvim) is installed as a dependency
 via the rockspec)_
 
 ## Usage
