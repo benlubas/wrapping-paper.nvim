@@ -14,17 +14,16 @@ happy with it for the time being.
 Example with lazy:
 
 ```lua
-{
-  "benlubas/wrapping-paper.nvim",
-  dependencies = {
-    "MunifTanjim/nui.nvim",
-  },
-},
+{ "benlubas/wrapping-paper.nvim" },
 ```
+
+_([nui.nvim](https://github.com/MunifTanjim/nui.nvim) is installed as a dependency
+via the rockspec)_
 
 ## Usage
 
-call setup if you want to wrap at different width, otherwise you don't need to
+call setup if you want to wrap at different width, otherwise you don't need to. Messing with
+keybinds is a little fiddly depending on the keybinds you want.
 
 ```lua
 require("wrapping-paper").setup({
