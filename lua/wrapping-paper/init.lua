@@ -140,7 +140,6 @@ M.wrap_line = function()
 
   vim.api.nvim_win_set_cursor(0, { linenumber, 0 })
   local text = vim.api.nvim_get_current_line()
-  open_buf = vim.api.nvim_get_current_buf()
 
   local height = calc_height(text, width)
   if height <= 0 then
@@ -150,6 +149,9 @@ M.wrap_line = function()
   if height == 1 then
     return
   end
+
+  open_buf = vim.api.nvim_get_current_buf()
+
   local popup = Popup({
     focusable = true,
     enter = true,
