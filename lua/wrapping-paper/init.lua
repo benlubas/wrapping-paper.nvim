@@ -147,6 +147,9 @@ M.wrap_line = function()
     vim.notify("[wrapping-paper] Line is too short", vim.log.levels.INFO)
     return
   end
+  if height == 1 then
+    return
+  end
   local popup = Popup({
     focusable = true,
     enter = true,
