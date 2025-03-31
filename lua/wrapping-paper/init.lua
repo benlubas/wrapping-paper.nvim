@@ -142,11 +142,7 @@ M.wrap_line = function()
   local text = vim.api.nvim_get_current_line()
 
   local height = calc_height(text, width)
-  if height <= 0 then
-    vim.notify("[wrapping-paper] Line is too short", vim.log.levels.INFO)
-    return
-  end
-  if height == 1 then
+  if height <= 1 then
     return
   end
 
